@@ -1,6 +1,8 @@
-import plural_ru from './plural_ru.js';
+import plural from './plural_ru.js';
 
 const strings = {};
+
+export plural;
 
 export function setStrings(lang, strHash)
 {
@@ -19,9 +21,19 @@ export function setLanguage(lang)
     language = lang;
 }
 
+export function getLanguage()
+{
+    return language;
+}
+
 export function setFallback(lang)
 {
     fallback = lang;
+}
+
+export function getFallback()
+{
+    return fallback;
 }
 
 export function L(s)
@@ -33,7 +45,7 @@ export function L(s)
         s = s.replace(/\{(\d+)\}/g, (m, m1) => (arg[parseInt(m1)]||''));
         s = s.replace(
             /\{N:(\d+):((?:[^:\\]+|\\.)*):((?:[^:\\]+|\\.)*):((?:[^:\\]+|\\.)*)\}/g,
-            (m, m1, m2, m3, m4) => plural_ru(
+            (m, m1, m2, m3, m4) => plural(
                 arg[parseInt(m1)]||'',
                 m2.replace(/\\(.)/g, '$1'),
                 m3.replace(/\\(.)/g, '$1'),
