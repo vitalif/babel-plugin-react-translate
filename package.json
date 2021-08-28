@@ -1,0 +1,36 @@
+{
+  "name": "babel-plugin-react-translate",
+  "version": "1.0.0",
+  "description": "Babel-based JS/JSX auto-translator for Russian language",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://yourcmc.ru/git/vitalif-js/babel-plugin-react-translate"
+  },
+  "keywords": [
+    "auto",
+    "automatic",
+    "babel",
+    "babel-plugin",
+    "globalization",
+    "intl",
+    "internationalization",
+    "i18n",
+    "localization",
+    "l10n",
+    "plugin",
+    "react",
+    "reactjs",
+    "russian",
+    "translation"
+  ],
+  "author": {
+    "name": "Vitaliy Filippov",
+    "email": "vitalif@yourcmc.ru",
+    "url": "http://yourcmc.ru/wiki/"
+  },
+  "license": "LGPL-3.0"
+}
