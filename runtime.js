@@ -6,7 +6,7 @@ import plural from './plural_ru.js';
 
 const strings = {};
 
-export plural;
+export { plural };
 
 export function setStrings(lang, strHash)
 {

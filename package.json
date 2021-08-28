@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-react-translate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Babel-based JS/JSX auto-translator for Russian language",
   "main": "index.js",
   "scripts": {
