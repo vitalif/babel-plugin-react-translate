@@ -1,3 +1,7 @@
+// babel-plugin-react-translate
+// (c) Vitaliy Filippov 2021+
+// SPDX-License-Identifier: LGPL-3.0
+
 const fs = require('fs');
 
 module.exports = function(babel)

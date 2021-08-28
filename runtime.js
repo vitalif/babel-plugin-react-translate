@@ -1,3 +1,7 @@
+// babel-plugin-react-translate
+// (c) Vitaliy Filippov 2021+
+// SPDX-License-Identifier: LGPL-3.0
+
 import plural from './plural_ru.js';
 
 const strings = {};
