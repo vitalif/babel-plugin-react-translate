@@ -4,7 +4,7 @@
   "description": "Babel-based JS/JSX auto-translator for Russian language",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -27,10 +27,21 @@
     "russian",
     "translation"
   ],
+  "files": [
+    "index.js",
+    "plural_ru.js",
+    "runtime.js",
+    "COPYING"
+  ],
   "author": {
     "name": "Vitaliy Filippov",
     "email": "vitalif@yourcmc.ru",
     "url": "http://yourcmc.ru/wiki/"
   },
-  "license": "LGPL-3.0"
+  "license": "LGPL-3.0",
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/plugin-transform-react-jsx": "^7.14.9",
+    "jest": "^27.1.0"
+  }
 }

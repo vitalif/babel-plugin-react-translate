@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`works 1`] = `
+"import { L } from \\"babel-plugin-react-translate/runtime\\";
+var name = \\"John\\";
+var foo = L(\\"\\\\u0401-Mobile\\");
+foo = L(\\"\\\\u041C\\\\u0435\\\\u043D\\\\u044F \\\\u0437\\\\u043E\\\\u0432\\\\u0443\\\\u0442 {1}!\\", name) + \\"  \\";
+foo = \\"  \\" + L(\\"\\\\u041C\\\\u0435\\\\u043D\\\\u044F \\\\u0437\\\\u043E\\\\u0432\\\\u0443\\\\u0442 {1}!\\", name);
+foo = /*#__PURE__*/React.createElement(\\"span\\", null, L(\\"\\\\u041F\\\\u0440\\\\u0438\\\\u0432\\\\u0435\\\\u0442!\\"));
+foo = L(\\"У меня много {1}: \\", L(\\"братьев\\"));"
+`;
