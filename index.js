@@ -79,7 +79,11 @@ module.exports = function(babel)
                         delete strings[path.hub.file.opts.filename];
                     const arrays = { ...strings };
                     for (let k in arrays)
+                    {
                         arrays[k] = Object.keys(arrays[k]);
+                        if (!arrays[k].length)
+                            delete arrays[k];
+                    }
                     fs.writeFileSync(
                         path.hub.file.opts.root+'/'+(state.opts['output'] || 'react-translate-output.json'),
                         JSON.stringify(arrays, null, 2)
