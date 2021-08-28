@@ -5,8 +5,34 @@ module.exports = function(babel)
     const t = babel.types;
     const importAdded = new WeakSet();
     const arg0 = new WeakSet();
+    const regexp = new WeakMap();
     const ru = /[А-ЯЁа-яё]/;
     const strings = {};
+    const getRegexp = function(state)
+    {
+        let re = regexp.get(state.opts);
+        if (!re)
+        {
+            re = new RegExp(state.opts.regexp || '[А-ЯЁа-яё]');
+            regexp.set(state.opts, re);
+        }
+        return re;
+    };
+    const splitWhite = function(str)
+    {
+        let l = /^\s+/.exec(str), r = /\s+$/.exec(str);
+        l = l ? l[0] : '';
+        r = r ? r[0] : '';
+        return [ l, str.substr(l.length, str.length-r.length-l.length), r ];
+    };
+    const withWhite = function(l, repl, r)
+    {
+        if (l)
+            repl = t.binaryExpression('+', t.stringLiteral(l), repl);
+        if (r)
+            repl = t.binaryExpression('+', repl, t.stringLiteral(r));
+        return repl;
+    };
     const addString = function(path, str)
     {
         strings[path.hub.file.opts.filename][str] = str;
@@ -44,26 +70,98 @@ module.exports = function(babel)
                     }
                     if (!found)
                         delete strings[path.hub.file.opts.filename];
+                    const arrays = { ...strings };
+                    for (let k in arrays)
+                        arrays[k] = Object.keys(arrays[k]);
                     fs.writeFileSync(
                         path.hub.file.opts.root+'/'+(state.opts['output'] || 'react-translate-output.json'),
-                        JSON.stringify(strings, null, 2)
+                        JSON.stringify(arrays, null, 2)
                     );
                 },
             },
-            Literal(path)
+            // Convert concatenated string literals and expressions to localization calls with arguments
+            // I.e. 'Really delete '+item.name+'?' -> L('Really delete {1}?', item.name)
+            BinaryExpression(path, state)
             {
+                if (path.node.operator === '+')
+                {
+                    let added = [ path.node.left, path.node.right ];
+                    for (let i = 0; i < added.length; i++)
+                    {
+                        if (t.isBinaryExpression(added[i]) && added[i].operator === '+')
+                        {
+                            added.splice(i, 1, added[i].left, added[i].right);
+                            i--;
+                        }
+                    }
+                    let ru = getRegexp(state);
+                    let i18n = false;
+                    for (let i = 0; i < added.length; i++)
+                    {
+                        if (t.isStringLiteral(added[i]) && ru.exec(added[i].value))
+                        {
+                            i18n = true;
+                            break;
+                        }
+                    }
+                    if (i18n)
+                    {
+                        let tpl = '', expressions = [];
+                        let lit = true, i = 0;
+                        while (i < added.length)
+                        {
+                            if (lit)
+                            {
+                                let text = '';
+                                while (i < added.length && t.isStringLiteral(added[i]))
+                                    text += added[i++].value;
+                                tpl += text;
+                            }
+                            else
+                            {
+                                let expr = null;
+                                while (i < added.length && !t.isStringLiteral(added[i]))
+                                    expr = expr ? t.binaryExpression('+', expr, added[i++]) : added[i++];
+                                expressions.push(expr);
+                                tpl += '{'+expressions.length+'}';
+                            }
+                            lit = !lit;
+                        }
+                        let [ lwhite, text, rwhite ] = splitWhite(tpl);
+                        addString(path, text);
+                        text = t.stringLiteral(text);
+                        // Stop the string literal from being visited again
+                        arg0.add(text);
+                        let repl = t.callExpression(t.identifier('L'), [ text, ...expressions ]);
+                        repl = withWhite(lwhite, repl, rwhite);
+                        path.replaceWith(repl);
+                    }
+                }
+            },
+            // Convert simple string literals to localization calls
+            // I.e. "Hello" -> L("Hello")
+            Literal(path, state)
+            {
+                let ru = getRegexp(state);
                 if (ru.exec(path.node.value))
                 {
-                    addString(path, path.node.value);
-                    addImport(path);
                     const parent = path.findParent(() => true);
-                    if (parent.isJSXAttribute())
-                        path.replaceWith(t.jsxExpressionContainer(t.callExpression(t.identifier('L'), [ path.node ])));
-                    else if (!arg0.has(path.node) && !path.findParent(parent => arg0.has(parent.node)))
+                    const isJSX = parent.isJSXAttribute();
+                    if (isJSX || !arg0.has(path.node) && !path.findParent(parent => arg0.has(parent.node)))
                     {
-                        // Stop the original string from being visited again
-                        arg0.add(path.node);
-                        path.replaceWith(t.callExpression(t.identifier('L'), [ path.node ]));
+                        const [ lwhite, text, rwhite ] = splitWhite(path.node.value);
+                        addString(path, text);
+                        addImport(path);
+                        let repl = t.callExpression(t.identifier('L'), [ t.stringLiteral(text) ]);
+                        repl = withWhite(lwhite, repl, rwhite);
+                        if (isJSX)
+                            path.replaceWith(t.jsxExpressionContainer(repl));
+                        else
+                        {
+                            // Stop the original string from being visited again
+                            arg0.add(repl);
+                            path.replaceWith(repl);
+                        }
                     }
                 }
             },
@@ -75,38 +173,44 @@ module.exports = function(babel)
                     arg0.add(path.node.arguments[0]);
                 }
             },
-            JSXText(path)
+            // Convert simple JSX literals to localization calls
+            // I.e. <b>Text</b> -> <b>{L("Text")}</b>
+            JSXText(path, state)
             {
+                let ru = getRegexp(state);
                 if (ru.exec(path.node.value))
                 {
+                    const [ lwhite, text, rwhite ] = splitWhite(path.node.value);
                     addImport(path);
-                    const lwhite = /^\s+/.exec(path.node.value);
-                    const rwhite = /\s+$/.exec(path.node.value);
-                    const llen = lwhite ? lwhite[0].length : 0;
-                    const text = path.node.value.substr(llen, path.node.value.length - llen - (rwhite ? rwhite[0].length : 0));
                     addString(path, text);
                     const repl = [];
                     if (lwhite)
-                        repl.push(t.jsxText(lwhite[0]));
+                        repl.push(t.jsxText(lwhite));
                     repl.push(t.jsxExpressionContainer(t.callExpression(t.identifier('L'), [ t.stringLiteral(text) ])));
                     if (rwhite)
-                        repl.push(t.jsxText(rwhite[0]));
+                        repl.push(t.jsxText(rwhite));
                     path.replaceWithMultiple(repl);
                 }
             },
-            TemplateLiteral(path)
+            // Convert template literals to localization calls with arguments
+            // I.e. `Really delete ${item.name}?` -> L("Really delete {1}?", item.name)
+            TemplateLiteral(path, state)
             {
+                let ru = getRegexp(state);
                 if (path.node.quasis.find(q => ru.exec(q.value.cooked)))
                 {
                     addImport(path);
-                    let text = path.node.quasis[0].value.cooked;
+                    let tpl = path.node.quasis[0].value.cooked;
                     for (let i = 1; i < path.node.quasis.length; i++)
-                        text += '{'+i+'}'+path.node.quasis[i].value.cooked;
+                        tpl += '{'+i+'}'+path.node.quasis[i].value.cooked;
+                    let [ lwhite, text, rwhite ] = splitWhite(tpl);
                     addString(path, text);
-                    // Stop the string literal from being visited again
                     text = t.stringLiteral(text);
+                    // Stop the string literal from being visited again
                     arg0.add(text);
-                    path.replaceWith(t.callExpression(t.identifier('L'), [ text, ...path.node.expressions ]));
+                    let repl = t.callExpression(t.identifier('L'), [ text, ...path.node.expressions ]);
+                    repl = withWhite(lwhite, repl, rwhite);
+                    path.replaceWith(repl);
                 }
             },
         },
