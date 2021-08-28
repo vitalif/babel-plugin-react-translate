@@ -39,7 +39,8 @@ module.exports = function(babel)
     };
     const addString = function(path, str)
     {
-        strings[path.hub.file.opts.filename][str] = str;
+        const fn = path.hub.file.opts.filename.substr(path.hub.file.opts.root.length+1);
+        strings[fn][str] = true;
     };
     const addImport = function(path)
     {
@@ -62,12 +63,14 @@ module.exports = function(babel)
             Program: {
                 enter(path, state)
                 {
-                    strings[path.hub.file.opts.filename] = {};
+                    const fn = path.hub.file.opts.filename.substr(path.hub.file.opts.root.length+1);
+                    strings[fn] = {};
                 },
                 exit(path, state)
                 {
+                    const fn = path.hub.file.opts.filename.substr(path.hub.file.opts.root.length+1);
                     let found = false;
-                    for (let k in strings[path.hub.file.opts.filename])
+                    for (let k in strings[fn])
                     {
                         found = true;
                         break;
