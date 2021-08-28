@@ -173,6 +173,12 @@ module.exports = function(babel)
             {
                 if (path.node.callee.type === 'Identifier' && path.node.callee.name === 'L')
                 {
+                    if (t.isStringLiteral(path.node.arguments[0]))
+                    {
+                        // Remember the user-provided string
+                        addString(path, path.node.arguments[0].value);
+                        addImport(path);
+                    }
                     // Skip the first argument
                     arg0.add(path.node.arguments[0]);
                 }
