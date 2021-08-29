@@ -46,7 +46,13 @@ export function L(s)
     if (arguments.length > 1)
     {
         const arg = arguments;
-        s = s.replace(/\{(\d+)\}/g, (m, m1) => (arg[parseInt(m1)]||''));
+        s = s.replace(/\{(\d+)\}/g, (m, m1) =>
+        {
+            let r = arg[parseInt(m1)];
+            if (r == null)
+                r = '';
+            return r;
+        });
         s = s.replace(
             /\{N:(\d+):((?:[^:\\]+|\\.)*):((?:[^:\\]+|\\.)*):((?:[^:\\]+|\\.)*)\}/g,
             (m, m1, m2, m3, m4) => plural(
