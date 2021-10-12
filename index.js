@@ -197,7 +197,8 @@ module.exports = function(babel)
                 let ru = getRegexp(state);
                 if (ru.exec(path.node.value))
                 {
-                    const [ lwhite, text, rwhite ] = splitWhite(path.node.value);
+                    let [ lwhite, text, rwhite ] = splitWhite(path.node.value);
+                    text = text.replace(/\s{2,}|[\n\r\t]/g, ' ');
                     addImport(path);
                     addString(path, text);
                     const repl = [];
