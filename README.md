@@ -76,6 +76,16 @@ import { plural } from 'babel-plugin-react-translate/runtime';
 console.log(plural(155, 'брат', 'брата', 'братьев'));
 ```
 
+# TODO
+
+It would be interesting to support React interpolation, like:
+
+```L('User $1 created new project', <a href="/user/1/">{user.name}</a>)```
+
+to
+
+`<>User <a href="/user/1/">{user.name}</a> created new project</>`
+
 # License and author
 
 Author: Vitaliy Filippov, 2021+

@@ -165,7 +165,9 @@ module.exports = function(babel)
                         addImport(path);
                         let repl = t.callExpression(t.identifier('L'), [ t.stringLiteral(text) ]);
                         repl = withWhite(lwhite, repl, rwhite);
-                        if (isJSX)
+                        if (parent.isObjectProperty() && !parent.node.computed)
+                            parent.replaceWith(t.objectProperty(repl, parent.node.value, true, parent.node.shorthard, parent.node.decorators));
+                        else if (isJSX)
                             path.replaceWith(t.jsxExpressionContainer(repl));
                         else
                         {
